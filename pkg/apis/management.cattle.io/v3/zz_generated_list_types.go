@@ -366,6 +366,23 @@ func NewEtcdBackup(namespace, name string, obj EtcdBackup) *EtcdBackup {
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
+// FaaList is a list of Faa resources
+type FaaList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata"`
+
+	Items []Faa `json:"items"`
+}
+
+func NewFaa(namespace, name string, obj Faa) *Faa {
+	obj.APIVersion, obj.Kind = SchemeGroupVersion.WithKind("Faa").ToAPIVersionAndKind()
+	obj.Name = name
+	obj.Namespace = namespace
+	return &obj
+}
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
 // FeatureList is a list of Feature resources
 type FeatureList struct {
 	metav1.TypeMeta `json:",inline"`

@@ -16,6 +16,7 @@ import (
 	"github.com/rancher/rancher/pkg/api/norman/customization/clustertemplate"
 	"github.com/rancher/rancher/pkg/api/norman/customization/cred"
 	"github.com/rancher/rancher/pkg/api/norman/customization/etcdbackup"
+	"github.com/rancher/rancher/pkg/api/norman/customization/faa"
 	"github.com/rancher/rancher/pkg/api/norman/customization/feature"
 	"github.com/rancher/rancher/pkg/api/norman/customization/globaldns"
 	"github.com/rancher/rancher/pkg/api/norman/customization/globalrole"
@@ -107,6 +108,8 @@ func Setup(ctx context.Context, apiContext *config.ScaledContext, clusterManager
 		client.UserType,
 		client.ClusterTemplateType,
 		client.ClusterTemplateRevisionType,
+		// 这里是 rancher generate 生成的 faa 文件中的 FaaType，加载自定义 CRD
+		client.FaaType,
 	)
 
 	factory.BatchCreateCRDs(ctx, config.ManagementStorageContext, scheme.Scheme, schemas, &managementschema.Version,
@@ -136,6 +139,10 @@ func Setup(ctx context.Context, apiContext *config.ScaledContext, clusterManager
 	}
 
 	Clusters(ctx, schemas, apiContext, clusterManager, k8sProxy)
+
+	// 调用下面定义的 Faa 函数
+	Faa(schemas, apiContext)
+
 	ClusterRoleTemplateBinding(schemas, apiContext)
 	api.User(ctx, schemas, apiContext)
 	SecretTypes(ctx, schemas, apiContext)
@@ -184,6 +191,27 @@ func Setup(ctx context.Context, apiContext *config.ScaledContext, clusterManager
 	GlobalDNSProvidersPwdWrap(schemas, apiContext, localClusterEnabled)
 
 	return nil
+}
+
+func Faa(schemas *types.Schemas, management *config.ScaledContext) {
+	schema := schemas.Schema(&managementschema.Version, client.FaaType)
+
+	// wrapper 变量就是在初始化 FaaWrapper 中的 User 等信息
+	wrapper := faa.FaaWrapper{
+		Users:     management.Management.Users(""),
+		GrbLister: management.Management.GlobalRoleBindings("").Controller().Lister(),
+		GrLister:  management.Management.GlobalRoles("").Controller().Lister(),
+	}
+
+	// 定义按钮提交后要执行的功能函数，这里调用的就是 4 中的 ActionHandler 函数
+	schema.ActionHandler = wrapper.ActionHandler
+
+	// 引入 4 中定义的 FaaWrapper，在定义 api type 为 resource 时的 action 名，绿色按钮部分
+	schema.Formatter = wrapper.Formatter
+
+	// 还可以 schema.CollectionFormatter 定义在 api type 为 collection 时引入的 action 功能
+
+	schema.Store = namespacedresource.Wrap(schema.Store, management.Core.Namespaces(""), namespace.GlobalNamespace)
 }
 
 func setupPasswordTypes(ctx context.Context, schemas *types.Schemas, management *config.ScaledContext) {

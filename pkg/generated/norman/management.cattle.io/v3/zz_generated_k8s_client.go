@@ -61,6 +61,7 @@ type Interface interface {
 	RkeAddonsGetter
 	FleetWorkspacesGetter
 	RancherUserNotificationsGetter
+	FaasGetter
 }
 
 type Client struct {
@@ -791,6 +792,20 @@ func (c *Client) RancherUserNotifications(namespace string) RancherUserNotificat
 	sharedClient := c.clientFactory.ForResourceKind(RancherUserNotificationGroupVersionResource, RancherUserNotificationGroupVersionKind.Kind, false)
 	objectClient := objectclient.NewObjectClient(namespace, sharedClient, &RancherUserNotificationResource, RancherUserNotificationGroupVersionKind, rancherUserNotificationFactory{})
 	return &rancherUserNotificationClient{
+		ns:           namespace,
+		client:       c,
+		objectClient: objectClient,
+	}
+}
+
+type FaasGetter interface {
+	Faas(namespace string) FaaInterface
+}
+
+func (c *Client) Faas(namespace string) FaaInterface {
+	sharedClient := c.clientFactory.ForResourceKind(FaaGroupVersionResource, FaaGroupVersionKind.Kind, false)
+	objectClient := objectclient.NewObjectClient(namespace, sharedClient, &FaaResource, FaaGroupVersionKind, faaFactory{})
+	return &faaClient{
 		ns:           namespace,
 		client:       c,
 		objectClient: objectClient,

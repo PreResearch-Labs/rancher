@@ -57,6 +57,7 @@ type Client struct {
 	RkeAddon                                  RkeAddonOperations
 	FleetWorkspace                            FleetWorkspaceOperations
 	RancherUserNotification                   RancherUserNotificationOperations
+	Faa                                       FaaOperations
 }
 
 func NewClient(opts *clientbase.ClientOpts) (*Client, error) {
@@ -119,6 +120,7 @@ func NewClient(opts *clientbase.ClientOpts) (*Client, error) {
 	client.RkeAddon = newRkeAddonClient(client)
 	client.FleetWorkspace = newFleetWorkspaceClient(client)
 	client.RancherUserNotification = newRancherUserNotificationClient(client)
+	client.Faa = newFaaClient(client)
 
 	return client, nil
 }

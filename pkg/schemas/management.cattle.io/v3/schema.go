@@ -53,11 +53,48 @@ var (
 		Init(driverMetadataTypes).
 		Init(encryptionTypes).
 		Init(fleetTypes).
-		Init(notificationTypes)
+		Init(notificationTypes).
+		// 初始化 faaTypes 函数
+		Init(faaTypes)
 
 	TokenSchemas = factory.Schemas(&Version).
 			Init(tokens)
 )
+
+// 定义 API 中的字段信息，以及 API type 为 Collection 或 resource 中的 action
+func faaTypes(schemas *types.Schemas) *types.Schemas {
+	return schemas.
+
+		// TypeName 是为了让 schemas 知道一个结构体 v3.Faa{} 已经引入并且映射到 faa；
+		// 在 schemas 中给 Faa{} 结构体定义名称。如图 2-1
+		TypeName("faa", v3.Faa{}).
+		TypeName("faaSpec", v3.FaaSpec{}).
+		TypeName("faaStatus", v3.FaaStatus{}).
+
+		// MustImport 把定义好的结构体导入导 schema 中
+		// 这个 v3.EchoActionInput{} 就是点击 echo1 action 按钮后出入的参数，会将这个参数转换为结构体;  如图: "按钮 input 内容定义"
+		MustImport(&Version, v3.EchoActionInput{}).
+
+		// 导入和自定义 input 的同时额外定义一些内容
+		// 注：必须先  MustImport "EchoActionInput" 才能够在这里定义 input: "echoActionInput"
+		MustImportAndCustomize(&Version, v3.Faa{}, func(schema *types.Schema) {
+
+			// schema.CollectionActions 定义 collection 中要添加的 action 方法
+
+			// schema.CollectionMethods 定义 Collection 中只允许 GET 操作; 如图 2-2
+			schema.CollectionMethods = []string{http.MethodGet}
+
+			// 这里没有定义 schema.ResourceMethods 所以增删改查权限都有；  如图 2-3
+			// schema.ResourceActions 定义一个 echo1 动作绿色按钮；  如图 2-3
+			schema.ResourceActions = map[string]types.Action{
+				"echo1": {
+					// 将 types.Action 类型传递给 schema.ResourceActions 告诉 schema 中已经定义的 echo1 他的 input 表单有那些字段
+					// echoActionInput 在 faa_types.go 文件中定义的结构体
+					Input: "echoActionInput",
+				},
+			}
+		})
+}
 
 func fleetTypes(schemas *types.Schemas) *types.Schemas {
 	return schemas.MustImport(&Version, v3.FleetWorkspace{})

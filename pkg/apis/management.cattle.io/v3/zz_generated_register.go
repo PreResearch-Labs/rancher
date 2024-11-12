@@ -49,6 +49,7 @@ var (
 	ComposeConfigResourceName                             = "composeconfigs"
 	DynamicSchemaResourceName                             = "dynamicschemas"
 	EtcdBackupResourceName                                = "etcdbackups"
+	FaaResourceName                                       = "faas"
 	FeatureResourceName                                   = "features"
 	FleetWorkspaceResourceName                            = "fleetworkspaces"
 	FreeIpaProviderResourceName                           = "freeipaproviders"
@@ -159,6 +160,8 @@ func addKnownTypes(scheme *runtime.Scheme) error {
 		&DynamicSchemaList{},
 		&EtcdBackup{},
 		&EtcdBackupList{},
+		&Faa{},
+		&FaaList{},
 		&Feature{},
 		&FeatureList{},
 		&FleetWorkspace{},

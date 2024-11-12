@@ -52,6 +52,7 @@ type Interface interface {
 	ComposeConfig() ComposeConfigController
 	DynamicSchema() DynamicSchemaController
 	EtcdBackup() EtcdBackupController
+	Faa() FaaController
 	Feature() FeatureController
 	FleetWorkspace() FleetWorkspaceController
 	FreeIpaProvider() FreeIpaProviderController
@@ -191,6 +192,10 @@ func (v *version) DynamicSchema() DynamicSchemaController {
 
 func (v *version) EtcdBackup() EtcdBackupController {
 	return generic.NewController[*v3.EtcdBackup, *v3.EtcdBackupList](schema.GroupVersionKind{Group: "management.cattle.io", Version: "v3", Kind: "EtcdBackup"}, "etcdbackups", true, v.controllerFactory)
+}
+
+func (v *version) Faa() FaaController {
+	return generic.NewNonNamespacedController[*v3.Faa, *v3.FaaList](schema.GroupVersionKind{Group: "management.cattle.io", Version: "v3", Kind: "Faa"}, "faas", v.controllerFactory)
 }
 
 func (v *version) Feature() FeatureController {
