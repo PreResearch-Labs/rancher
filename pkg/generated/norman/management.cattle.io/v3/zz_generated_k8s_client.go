@@ -62,6 +62,7 @@ type Interface interface {
 	FleetWorkspacesGetter
 	RancherUserNotificationsGetter
 	FaasGetter
+	GPUsGetter
 }
 
 type Client struct {
@@ -806,6 +807,20 @@ func (c *Client) Faas(namespace string) FaaInterface {
 	sharedClient := c.clientFactory.ForResourceKind(FaaGroupVersionResource, FaaGroupVersionKind.Kind, false)
 	objectClient := objectclient.NewObjectClient(namespace, sharedClient, &FaaResource, FaaGroupVersionKind, faaFactory{})
 	return &faaClient{
+		ns:           namespace,
+		client:       c,
+		objectClient: objectClient,
+	}
+}
+
+type GPUsGetter interface {
+	GPUs(namespace string) GPUInterface
+}
+
+func (c *Client) GPUs(namespace string) GPUInterface {
+	sharedClient := c.clientFactory.ForResourceKind(GPUGroupVersionResource, GPUGroupVersionKind.Kind, false)
+	objectClient := objectclient.NewObjectClient(namespace, sharedClient, &GPUResource, GPUGroupVersionKind, gpuFactory{})
+	return &gpuClient{
 		ns:           namespace,
 		client:       c,
 		objectClient: objectClient,

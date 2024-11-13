@@ -56,6 +56,7 @@ type Interface interface {
 	Feature() FeatureController
 	FleetWorkspace() FleetWorkspaceController
 	FreeIpaProvider() FreeIpaProviderController
+	GPU() GPUController
 	GenericOIDCProvider() GenericOIDCProviderController
 	GithubProvider() GithubProviderController
 	GlobalDns() GlobalDnsController
@@ -208,6 +209,10 @@ func (v *version) FleetWorkspace() FleetWorkspaceController {
 
 func (v *version) FreeIpaProvider() FreeIpaProviderController {
 	return generic.NewNonNamespacedController[*v3.FreeIpaProvider, *v3.FreeIpaProviderList](schema.GroupVersionKind{Group: "management.cattle.io", Version: "v3", Kind: "FreeIpaProvider"}, "freeipaproviders", v.controllerFactory)
+}
+
+func (v *version) GPU() GPUController {
+	return generic.NewNonNamespacedController[*v3.GPU, *v3.GPUList](schema.GroupVersionKind{Group: "management.cattle.io", Version: "v3", Kind: "GPU"}, "gpus", v.controllerFactory)
 }
 
 func (v *version) GenericOIDCProvider() GenericOIDCProviderController {

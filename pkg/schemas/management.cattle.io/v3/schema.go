@@ -55,11 +55,30 @@ var (
 		Init(fleetTypes).
 		Init(notificationTypes).
 		// 初始化 faaTypes 函数
-		Init(faaTypes)
+		Init(faaTypes).
+		Init(gpuTypes)
 
 	TokenSchemas = factory.Schemas(&Version).
 			Init(tokens)
 )
+
+// Define API field information and actions for Collection or resource types
+func gpuTypes(schemas *types.Schemas) *types.Schemas {
+	return schemas.
+		TypeName("gpu", v3.GPU{}).
+		TypeName("gpuSpec", v3.GPUSpec{NodeGPUs: make(map[string]int)}).
+		TypeName("gpuStatus", v3.GPUStatus{}).
+		MustImport(&Version, v3.GpuActionInput{}).
+		MustImportAndCustomize(&Version, v3.GPU{}, func(schema *types.Schema) {
+			schema.CollectionMethods = []string{http.MethodGet}
+
+			schema.ResourceActions = map[string]types.Action{
+				"updateGPU": {
+					Input: "gpuActionInput",
+				},
+			}
+		})
+}
 
 // 定义 API 中的字段信息，以及 API type 为 Collection 或 resource 中的 action
 func faaTypes(schemas *types.Schemas) *types.Schemas {

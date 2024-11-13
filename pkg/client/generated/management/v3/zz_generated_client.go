@@ -58,6 +58,7 @@ type Client struct {
 	FleetWorkspace                            FleetWorkspaceOperations
 	RancherUserNotification                   RancherUserNotificationOperations
 	Faa                                       FaaOperations
+	GPU                                       GPUOperations
 }
 
 func NewClient(opts *clientbase.ClientOpts) (*Client, error) {
@@ -121,6 +122,7 @@ func NewClient(opts *clientbase.ClientOpts) (*Client, error) {
 	client.FleetWorkspace = newFleetWorkspaceClient(client)
 	client.RancherUserNotification = newRancherUserNotificationClient(client)
 	client.Faa = newFaaClient(client)
+	client.GPU = newGPUClient(client)
 
 	return client, nil
 }

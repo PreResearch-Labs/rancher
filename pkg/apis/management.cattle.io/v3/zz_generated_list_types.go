@@ -434,6 +434,23 @@ func NewFreeIpaProvider(namespace, name string, obj FreeIpaProvider) *FreeIpaPro
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
+// GPUList is a list of GPU resources
+type GPUList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata"`
+
+	Items []GPU `json:"items"`
+}
+
+func NewGPU(namespace, name string, obj GPU) *GPU {
+	obj.APIVersion, obj.Kind = SchemeGroupVersion.WithKind("GPU").ToAPIVersionAndKind()
+	obj.Name = name
+	obj.Namespace = namespace
+	return &obj
+}
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
 // GenericOIDCProviderList is a list of GenericOIDCProvider resources
 type GenericOIDCProviderList struct {
 	metav1.TypeMeta `json:",inline"`
