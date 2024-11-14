@@ -23,17 +23,17 @@ type Controller struct {
 }
 
 // controller 初始化
-func Register(ctx context.Context, scaledContext *config.ScaledContext, manager *clustermanager.Manager) error {
+func Register(ctx context.Context, management *config.ManagementContext, manager *clustermanager.Manager) error {
 	c := &Controller{
 		ctx:            ctx,
 		clusterManager: manager,
-		clusters:       scaledContext.Management.Clusters(""),
-		clusterLister:  scaledContext.Management.Clusters("").Controller().Lister(),
-		faas:           scaledContext.Management.Faas(""),
-		faaLister:      scaledContext.Management.Faas("").Controller().Lister(),
+		clusters:       management.Management.Clusters(""),
+		clusterLister:  management.Management.Clusters("").Controller().Lister(),
+		faas:           management.Management.Faas(""),
+		faaLister:      management.Management.Faas("").Controller().Lister(),
 	}
 
-	scaledContext.Management.Clusters("").AddHandler(ctx, "faa-controller", c.syncByCluster)
+	management.Management.Clusters("").AddHandler(ctx, "faa-controller", c.syncByCluster)
 	return nil
 }
 

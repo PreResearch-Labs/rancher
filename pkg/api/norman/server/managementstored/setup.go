@@ -2,6 +2,7 @@ package managementstored
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"github.com/rancher/norman/store/crd"
@@ -21,6 +22,7 @@ import (
 	"github.com/rancher/rancher/pkg/api/norman/customization/globaldns"
 	"github.com/rancher/rancher/pkg/api/norman/customization/globalrole"
 	"github.com/rancher/rancher/pkg/api/norman/customization/globalrolebinding"
+	"github.com/rancher/rancher/pkg/api/norman/customization/gpu"
 	"github.com/rancher/rancher/pkg/api/norman/customization/kontainerdriver"
 	"github.com/rancher/rancher/pkg/api/norman/customization/multiclusterapp"
 	"github.com/rancher/rancher/pkg/api/norman/customization/namespacedresource"
@@ -140,8 +142,8 @@ func Setup(ctx context.Context, apiContext *config.ScaledContext, clusterManager
 
 	Clusters(ctx, schemas, apiContext, clusterManager, k8sProxy)
 
-	// 调用下面定义的 Faa 函数
-	Faa(schemas, apiContext)
+	Faa(schemas, apiContext) // 新增 Faa 函数
+	//GPU(schemas, apiContext) // 新增 GPU 函数
 
 	ClusterRoleTemplateBinding(schemas, apiContext)
 	api.User(ctx, schemas, apiContext)
@@ -191,6 +193,24 @@ func Setup(ctx context.Context, apiContext *config.ScaledContext, clusterManager
 	GlobalDNSProvidersPwdWrap(schemas, apiContext, localClusterEnabled)
 
 	return nil
+}
+
+func GPU(schemas *types.Schemas, management *config.ScaledContext) {
+	fmt.Println("management.Management:", management.Management)
+	fmt.Println("management.Core:", management.Core)
+
+	schema := schemas.Schema(&managementschema.Version, client.GPUType)
+
+	wrapper := gpu.GPUWrapper{
+		Users:     management.Management.Users(""),
+		GrbLister: management.Management.GlobalRoleBindings("").Controller().Lister(),
+		GrLister:  management.Management.GlobalRoles("").Controller().Lister(),
+	}
+
+	schema.ActionHandler = wrapper.ActionHandler
+	schema.Formatter = wrapper.Formatter
+
+	schema.Store = namespacedresource.Wrap(schema.Store, management.Core.Namespaces(""), namespace.GlobalNamespace)
 }
 
 func Faa(schemas *types.Schemas, management *config.ScaledContext) {
