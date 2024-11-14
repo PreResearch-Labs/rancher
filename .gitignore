@@ -1,4 +1,5 @@
 vendor
+__debug*
 /.dapper
 /bin
 /dist

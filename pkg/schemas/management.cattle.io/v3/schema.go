@@ -53,11 +53,47 @@ var (
 		Init(driverMetadataTypes).
 		Init(encryptionTypes).
 		Init(fleetTypes).
-		Init(notificationTypes)
+		Init(notificationTypes).
+		Init(gpuTypes)
 
 	TokenSchemas = factory.Schemas(&Version).
 			Init(tokens)
 )
+
+// 定义 API 中的字段信息，以及 API type 为 Collection 或 resource 中的 action
+func gpuTypes(schemas *types.Schemas) *types.Schemas {
+	return schemas.
+
+		// TypeName 是为了让 schemas 知道一个结构体 v3.GPU{} 已经引入并且映射到 gpu；
+		// 在 schemas 中给 GPU{} 结构体定义名称。
+		TypeName("gpu", v3.GPU{}).
+		TypeName("gpuSpec", v3.GPUSpec{}).
+		TypeName("gpuStatus", v3.GPUStatus{}).
+
+		// MustImport 把定义好的结构体导入导 schema 中
+		// 这个 v3.GPUCountActionInput{} 就是点击 countGPU action 按钮后出入的参数，会将这个参数转换为结构体;
+		MustImport(&Version, v3.GpuCountActionInput{}).
+
+		// 导入和自定义 input 的同时额外定义一些内容
+		// 注：必须先  MustImport "GPUCountActionInput" 才能够在这里定义 input: "gpuCountActionInput"
+		MustImportAndCustomize(&Version, v3.GPU{}, func(schema *types.Schema) {
+
+			// schema.CollectionActions 定义 collection 中要添加的 action 方法
+
+			// schema.CollectionMethods 定义 Collection 中只允许 GET 操作;
+			schema.CollectionMethods = []string{http.MethodGet}
+
+			// 这里没有定义 schema.ResourceMethods 所以增删改查权限都有；
+			// schema.ResourceActions 定义一个 countGPU 动作绿色按钮；
+			schema.ResourceActions = map[string]types.Action{
+				"countGPU": {
+					// 将 types.Action 类型传递给 schema.ResourceActions 告诉 schema 中已经定义的 countGPU 他的 input 表单有那些字段
+					// gpuCountActionInput 在 gpu_types.go 文件中定义的结构体
+					Input: "gpuCountActionInput",
+				},
+			}
+		})
+}
 
 func fleetTypes(schemas *types.Schemas) *types.Schemas {
 	return schemas.MustImport(&Version, v3.FleetWorkspace{})

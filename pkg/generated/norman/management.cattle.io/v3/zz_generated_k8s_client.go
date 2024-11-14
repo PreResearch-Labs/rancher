@@ -61,6 +61,7 @@ type Interface interface {
 	RkeAddonsGetter
 	FleetWorkspacesGetter
 	RancherUserNotificationsGetter
+	GPUsGetter
 }
 
 type Client struct {
@@ -791,6 +792,20 @@ func (c *Client) RancherUserNotifications(namespace string) RancherUserNotificat
 	sharedClient := c.clientFactory.ForResourceKind(RancherUserNotificationGroupVersionResource, RancherUserNotificationGroupVersionKind.Kind, false)
 	objectClient := objectclient.NewObjectClient(namespace, sharedClient, &RancherUserNotificationResource, RancherUserNotificationGroupVersionKind, rancherUserNotificationFactory{})
 	return &rancherUserNotificationClient{
+		ns:           namespace,
+		client:       c,
+		objectClient: objectClient,
+	}
+}
+
+type GPUsGetter interface {
+	GPUs(namespace string) GPUInterface
+}
+
+func (c *Client) GPUs(namespace string) GPUInterface {
+	sharedClient := c.clientFactory.ForResourceKind(GPUGroupVersionResource, GPUGroupVersionKind.Kind, false)
+	objectClient := objectclient.NewObjectClient(namespace, sharedClient, &GPUResource, GPUGroupVersionKind, gpuFactory{})
+	return &gpuClient{
 		ns:           namespace,
 		client:       c,
 		objectClient: objectClient,
