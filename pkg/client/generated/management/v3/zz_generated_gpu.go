@@ -59,7 +59,7 @@ type GPUOperations interface {
 	ByID(id string) (*GPU, error)
 	Delete(container *GPU) error
 
-	ActionCountGPU(resource *GPU, input *GpuCountActionInput) error
+	ActionCountGPU1(resource *GPU, input *GpuCountActionInput) error
 }
 
 func newGPUClient(apiClient *Client) *GPUClient {
@@ -131,7 +131,7 @@ func (c *GPUClient) Delete(container *GPU) error {
 	return c.apiClient.Ops.DoResourceDelete(GPUType, &container.Resource)
 }
 
-func (c *GPUClient) ActionCountGPU(resource *GPU, input *GpuCountActionInput) error {
-	err := c.apiClient.Ops.DoAction(GPUType, "countGPU", &resource.Resource, input, nil)
+func (c *GPUClient) ActionCountGPU1(resource *GPU, input *GpuCountActionInput) error {
+	err := c.apiClient.Ops.DoAction(GPUType, "countGPU1", &resource.Resource, input, nil)
 	return err
 }

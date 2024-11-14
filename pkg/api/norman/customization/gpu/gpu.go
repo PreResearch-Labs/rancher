@@ -19,7 +19,7 @@ type GPUWrapper struct {
 // 给 rancher api 添加事件，如果这里没有添加 countGPU 按钮是不能用的
 // countGPU 要与 schema 中的 MustImportAndCustomize 中 types.Action -> input ->  key 对应
 func (w *GPUWrapper) Formatter(request *types.APIContext, resource *types.RawResource) {
-	resource.AddAction(request, "countGPU")
+	resource.AddAction(request, "countGPU1")
 	// 在数据 data 中的 links 里面添加一个新的 url；
 	resource.Links["gpuStats"] = "gpuStats"
 }
@@ -41,7 +41,7 @@ func (w *GPUWrapper) ActionHandler(actionName string, action *types.Action, requ
 	}
 
 	switch actionName {
-	case "countGPU":
+	case "countGPU1":
 		// 这里可以添加具体的 GPU 数量统计逻辑
 		gpuCount := 42 // 假设统计到的 GPU 数量为 42 TODO: this is fake GPU count.
 		response := v3.GPUStatus{Message: fmt.Sprintf("GPU Count: %d", gpuCount)}

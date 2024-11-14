@@ -54,7 +54,7 @@ func (c *Controller) InitGPU() error {
 			Namespace: "cattle-global-data",
 		},
 		Spec: v3.GPUSpec{
-			Enabled: true,
+			Enabled: false,
 		},
 		Status: v3.GPUStatus{
 			Message: "",

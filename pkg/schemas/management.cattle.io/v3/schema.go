@@ -86,7 +86,7 @@ func gpuTypes(schemas *types.Schemas) *types.Schemas {
 			// 这里没有定义 schema.ResourceMethods 所以增删改查权限都有；
 			// schema.ResourceActions 定义一个 countGPU 动作绿色按钮；
 			schema.ResourceActions = map[string]types.Action{
-				"countGPU": {
+				"countGPU1": {
 					// 将 types.Action 类型传递给 schema.ResourceActions 告诉 schema 中已经定义的 countGPU 他的 input 表单有那些字段
 					// gpuCountActionInput 在 gpu_types.go 文件中定义的结构体
 					Input: "gpuCountActionInput",
