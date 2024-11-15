@@ -14,12 +14,6 @@ type GPU struct {
 
 	Spec   GPUSpec   `json:"spec"`
 	Status GPUStatus `json:"status"`
-
-	// 集群中所有节点的 GPU 总量
-	TotalGPUCount int `json:"totalGPUCount"`
-
-	// 每个节点的 GPU 信息
-	NodeGPUInfo []NodeGPUInfo `json:"nodeGPUInfo"`
 }
 
 type GPUSpec struct {
@@ -29,20 +23,49 @@ type GPUSpec struct {
 
 type GPUStatus struct {
 	Message string `json:"message"`
+	// 所有集群中所有节点的 GPU 总量
+	TotalGPUCount int `json:"totalGPUCount"`
+
+	// 每个集群的 GPU 信息
+	ClusterGPUInfo []ClusterGPUInfo `json:"clusterGPUInfo"`
+}
+
+// 表示每个集群的 GPU 信息
+type ClusterGPUInfo struct {
+	// 集群名称
+	ClusterName string `json:"clusterName"`
+	// 当前集群中所有节点的 GPU 总量
+	TotalGPUCount int `json:"totalGPUCount"`
+	// 当前集群中所有节点的 GPU 信息
+	NodeGPUInfo []NodeGPUInfo `json:"nodeGPUInfo"`
 }
 
 // 表示每个节点的 GPU 信息
 type NodeGPUInfo struct {
-	NodeName  string `json:"nodeName"`
-	TotalGPU  int    `json:"totalGPU"`
-	UsedGPU   int    `json:"usedGPU"`
-	UnusedGPU int    `json:"unusedGPU"`
+	// 节点 ID
+	NodeId string `json:"nodeId"`
+	// 节点主机名
+	NodeHostName string `json:"nodeHostName"`
+	// 节点名称
+	NodeName string `json:"nodeName"`
+	// 总 GPU 数量
+	TotalGPU int `json:"totalGPU"`
+	// 已使用的 GPU 数量
+	UsedGPU int `json:"usedGPU"`
+	// 未使用的 GPU 数量
+	UnusedGPU int `json:"unusedGPU"`
 }
 
 // action 入参结构体
 type GpuCountActionInput struct {
+	// 节点主机名，用于筛选特定节点
+	NodeHostName string `json:"nodeHostName"`
 	// 节点名称，用于筛选特定节点
 	NodeName string `json:"nodeName"`
+	// 节点 ID，用于筛选特定节点
+	NodeId string `json:"nodeId"`
+	// 集群名称，用于筛选特定集群
+	ClusterName string `json:"clusterName"`
 	// 统计维度：total, used, unused
 	StatDimension string `json:"statDimension"`
 	// 是否启用调试模式

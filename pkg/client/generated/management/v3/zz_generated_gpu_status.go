@@ -1,10 +1,14 @@
 package client
 
 const (
-	GPUStatusType         = "gpuStatus"
-	GPUStatusFieldMessage = "message"
+	GPUStatusType                = "gpuStatus"
+	GPUStatusFieldClusterGPUInfo = "clusterGPUInfo"
+	GPUStatusFieldMessage        = "message"
+	GPUStatusFieldTotalGPUCount  = "totalGPUCount"
 )
 
 type GPUStatus struct {
-	Message string `json:"message,omitempty" yaml:"message,omitempty"`
+	ClusterGPUInfo []ClusterGPUInfo `json:"clusterGPUInfo,omitempty" yaml:"clusterGPUInfo,omitempty"`
+	Message        string           `json:"message,omitempty" yaml:"message,omitempty"`
+	TotalGPUCount  int64            `json:"totalGPUCount,omitempty" yaml:"totalGPUCount,omitempty"`
 }

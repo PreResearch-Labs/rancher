@@ -35,26 +35,6 @@ spec:
             type: string
           metadata:
             type: object
-          nodeGPUInfo:
-            description: 每个节点的 GPU 信息
-            items:
-              description: 表示每个节点的 GPU 信息
-              properties:
-                nodeName:
-                  type: string
-                totalGPU:
-                  type: integer
-                unusedGPU:
-                  type: integer
-                usedGPU:
-                  type: integer
-              required:
-              - nodeName
-              - totalGPU
-              - unusedGPU
-              - usedGPU
-              type: object
-            type: array
           spec:
             properties:
               enabled:
@@ -65,19 +45,68 @@ spec:
             type: object
           status:
             properties:
+              clusterGPUInfo:
+                description: 每个集群的 GPU 信息
+                items:
+                  description: 表示每个集群的 GPU 信息
+                  properties:
+                    clusterName:
+                      description: 集群名称
+                      type: string
+                    nodeGPUInfo:
+                      description: 当前集群中所有节点的 GPU 信息
+                      items:
+                        description: 表示每个节点的 GPU 信息
+                        properties:
+                          nodeHostName:
+                            description: 节点主机名
+                            type: string
+                          nodeId:
+                            description: 节点 ID
+                            type: string
+                          nodeName:
+                            description: 节点名称
+                            type: string
+                          totalGPU:
+                            description: 总 GPU 数量
+                            type: integer
+                          unusedGPU:
+                            description: 未使用的 GPU 数量
+                            type: integer
+                          usedGPU:
+                            description: 已使用的 GPU 数量
+                            type: integer
+                        required:
+                        - nodeHostName
+                        - nodeId
+                        - nodeName
+                        - totalGPU
+                        - unusedGPU
+                        - usedGPU
+                        type: object
+                      type: array
+                    totalGPUCount:
+                      description: 当前集群中所有节点的 GPU 总量
+                      type: integer
+                  required:
+                  - clusterName
+                  - nodeGPUInfo
+                  - totalGPUCount
+                  type: object
+                type: array
               message:
                 type: string
+              totalGPUCount:
+                description: 所有集群中所有节点的 GPU 总量
+                type: integer
             required:
+            - clusterGPUInfo
             - message
+            - totalGPUCount
             type: object
-          totalGPUCount:
-            description: 集群中所有节点的 GPU 总量
-            type: integer
         required:
-        - nodeGPUInfo
         - spec
         - status
-        - totalGPUCount
         type: object
     served: true
     storage: true

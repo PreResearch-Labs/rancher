@@ -12,12 +12,10 @@ const (
 	GPUFieldEnabled              = "enabled"
 	GPUFieldLabels               = "labels"
 	GPUFieldName                 = "name"
-	GPUFieldNodeGPUInfo          = "nodeGPUInfo"
 	GPUFieldOwnerReferences      = "ownerReferences"
 	GPUFieldRemoved              = "removed"
 	GPUFieldState                = "state"
 	GPUFieldStatus               = "status"
-	GPUFieldTotalGPUCount        = "totalGPUCount"
 	GPUFieldTransitioning        = "transitioning"
 	GPUFieldTransitioningMessage = "transitioningMessage"
 	GPUFieldUUID                 = "uuid"
@@ -31,12 +29,10 @@ type GPU struct {
 	Enabled              *bool             `json:"enabled,omitempty" yaml:"enabled,omitempty"`
 	Labels               map[string]string `json:"labels,omitempty" yaml:"labels,omitempty"`
 	Name                 string            `json:"name,omitempty" yaml:"name,omitempty"`
-	NodeGPUInfo          []NodeGPUInfo     `json:"nodeGPUInfo,omitempty" yaml:"nodeGPUInfo,omitempty"`
 	OwnerReferences      []OwnerReference  `json:"ownerReferences,omitempty" yaml:"ownerReferences,omitempty"`
 	Removed              string            `json:"removed,omitempty" yaml:"removed,omitempty"`
 	State                string            `json:"state,omitempty" yaml:"state,omitempty"`
 	Status               *GPUStatus        `json:"status,omitempty" yaml:"status,omitempty"`
-	TotalGPUCount        int64             `json:"totalGPUCount,omitempty" yaml:"totalGPUCount,omitempty"`
 	Transitioning        string            `json:"transitioning,omitempty" yaml:"transitioning,omitempty"`
 	TransitioningMessage string            `json:"transitioningMessage,omitempty" yaml:"transitioningMessage,omitempty"`
 	UUID                 string            `json:"uuid,omitempty" yaml:"uuid,omitempty"`

@@ -18,15 +18,15 @@ type GPUWrapper struct {
 	NodeLister mgmtv3.NodeLister
 }
 
-// 给 rancher api 添加事件，如果这里没有添加 countGPU 按钮是不能用的
-// countGPU 要与 schema 中的 MustImportAndCustomize 中 types.Action -> input ->  key 对应
+// 给 rancher api 添加事件，如果这里没有添加 countGPU1 按钮是不能用的
+// countGPU1 要与 schema 中的 MustImportAndCustomize 中 types.Action -> input ->  key 对应
 func (w *GPUWrapper) Formatter(request *types.APIContext, resource *types.RawResource) {
 	resource.AddAction(request, "countGPU1")
 	// 在数据 data 中的 links 里面添加一个新的 url；
 	resource.Links["gpuStats"] = "gpuStats"
 }
 
-// 用户使用 action 按钮功能后触发这个函数。本例中的 countGPU 按钮
+// 用户使用 action 按钮功能后触发这个函数。本例中的 countGPU1 按钮
 func (w *GPUWrapper) ActionHandler(actionName string, action *types.Action, request *types.APIContext) error {
 	callerID := request.Request.Header.Get(gaccess.ImpersonateUserHeader)
 	ma := gaccess.MemberAccess{
@@ -62,25 +62,47 @@ func (w *GPUWrapper) ActionHandler(actionName string, action *types.Action, requ
 		}
 
 		// 根据输入参数筛选节点
-		var filteredNodeGPUInfo []v3.NodeGPUInfo
+		clusterGPUInfoMap := make(map[string]*v3.ClusterGPUInfo)
 		var totalGPUCount int
 		for _, node := range nodes {
-			if input.NodeName == "" || node.Name == input.NodeName {
-				nodeGPUInfo := v3.NodeGPUInfo{
-					NodeName:  node.Name,
-					TotalGPU:  getGPUCountFromNode(node),
-					UsedGPU:   getUsedGPUCountFromNode(node),
-					UnusedGPU: getUnusedGPUCountFromNode(node),
+			if (input.NodeHostName == "" || node.Spec.RequestedHostname == input.NodeHostName) &&
+				(input.NodeName == "" || node.Name == input.NodeName) &&
+				(input.NodeId == "" || node.Name == input.NodeId) &&
+				(input.ClusterName == "" || node.ObjClusterName() == input.ClusterName) {
+				clusterName := node.ObjClusterName()
+				if _, ok := clusterGPUInfoMap[clusterName]; !ok {
+					clusterGPUInfoMap[clusterName] = &v3.ClusterGPUInfo{
+						ClusterName:   clusterName,
+						TotalGPUCount: 0,
+						NodeGPUInfo:   []v3.NodeGPUInfo{},
+					}
 				}
-				filteredNodeGPUInfo = append(filteredNodeGPUInfo, nodeGPUInfo)
+
+				nodeGPUInfo := v3.NodeGPUInfo{
+					NodeId:       fmt.Sprintf("%s:%s", clusterName, node.Name),
+					NodeHostName: node.Spec.RequestedHostname,
+					NodeName:     node.Name,
+					TotalGPU:     getGPUCountFromNode(node),
+					UsedGPU:      getUsedGPUCountFromNode(node),
+					UnusedGPU:    getUnusedGPUCountFromNode(node),
+				}
+				clusterGPUInfoMap[clusterName].NodeGPUInfo = append(clusterGPUInfoMap[clusterName].NodeGPUInfo, nodeGPUInfo)
+				clusterGPUInfoMap[clusterName].TotalGPUCount += nodeGPUInfo.TotalGPU
 				totalGPUCount += nodeGPUInfo.TotalGPU
 			}
 		}
 
 		// 构建响应
+		var clusterGPUInfoList []v3.ClusterGPUInfo
+		for _, clusterGPUInfo := range clusterGPUInfoMap {
+			clusterGPUInfoList = append(clusterGPUInfoList, *clusterGPUInfo)
+		}
+
 		response := v3.GPU{
-			TotalGPUCount: totalGPUCount,
-			NodeGPUInfo:   filteredNodeGPUInfo,
+			Status: v3.GPUStatus{
+				TotalGPUCount:  totalGPUCount,
+				ClusterGPUInfo: clusterGPUInfoList,
+			},
 		}
 
 		// 序列化响应并发送

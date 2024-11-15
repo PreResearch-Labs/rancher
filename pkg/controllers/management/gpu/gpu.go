@@ -10,6 +10,7 @@ import (
 	"github.com/rancher/rancher/pkg/types/config"
 	k8sErrors "k8s.io/apimachinery/pkg/api/errors"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
@@ -20,6 +21,7 @@ type Controller struct {
 	clusterLister  mgmtv3.ClusterLister
 	gpus           mgmtv3.GPUInterface
 	gpuLister      mgmtv3.GPULister
+	nodeLister     mgmtv3.NodeLister
 }
 
 // controller 初始化
@@ -31,6 +33,7 @@ func Register(ctx context.Context, management *config.ManagementContext, manager
 		clusterLister:  management.Management.Clusters("").Controller().Lister(),
 		gpus:           management.Management.GPUs(""),
 		gpuLister:      management.Management.GPUs("").Controller().Lister(),
+		nodeLister:     management.Management.Nodes("").Controller().Lister(),
 	}
 
 	management.Management.Clusters("").AddHandler(ctx, "gpu-controller", c.syncByCluster)
@@ -45,6 +48,44 @@ func (c *Controller) syncByCluster(key string, cluster *v3.Cluster) (runtime.Obj
 }
 
 func (c *Controller) InitGPU() error {
+	// 获取所有节点
+	nodes, err := c.nodeLister.List("", labels.Everything())
+	if err != nil {
+		return err
+	}
+
+	// 统计每个集群的 GPU 信息
+	clusterGPUInfoMap := make(map[string]*v3.ClusterGPUInfo)
+	var totalGPUCount int
+	for _, node := range nodes {
+		clusterName := node.ObjClusterName()
+		if _, ok := clusterGPUInfoMap[clusterName]; !ok {
+			clusterGPUInfoMap[clusterName] = &v3.ClusterGPUInfo{
+				ClusterName:   clusterName,
+				TotalGPUCount: 0,
+				NodeGPUInfo:   []v3.NodeGPUInfo{},
+			}
+		}
+
+		nodeGPUInfo := v3.NodeGPUInfo{
+			NodeId:       node.Name,
+			NodeHostName: node.Spec.RequestedHostname,
+			NodeName:     node.Name,
+			TotalGPU:     getGPUCountFromNode(node),
+			UsedGPU:      getUsedGPUCountFromNode(node),
+			UnusedGPU:    getUnusedGPUCountFromNode(node),
+		}
+		clusterGPUInfoMap[clusterName].NodeGPUInfo = append(clusterGPUInfoMap[clusterName].NodeGPUInfo, nodeGPUInfo)
+		clusterGPUInfoMap[clusterName].TotalGPUCount += nodeGPUInfo.TotalGPU
+		totalGPUCount += nodeGPUInfo.TotalGPU
+	}
+
+	// 构建 ClusterGPUInfo 列表
+	var clusterGPUInfoList []v3.ClusterGPUInfo
+	for _, clusterGPUInfo := range clusterGPUInfoMap {
+		clusterGPUInfoList = append(clusterGPUInfoList, *clusterGPUInfo)
+	}
+
 	payload := &v3.GPU{
 		TypeMeta: v1.TypeMeta{
 			Kind: "Gpu",
@@ -57,12 +98,13 @@ func (c *Controller) InitGPU() error {
 			Enabled: false,
 		},
 		Status: v3.GPUStatus{
-			Message: "",
+			Message:        "",
+			TotalGPUCount:  totalGPUCount,
+			ClusterGPUInfo: clusterGPUInfoList,
 		},
-		TotalGPUCount: 0,
-		NodeGPUInfo:   []v3.NodeGPUInfo{},
 	}
-	_, err := c.gpus.GetNamespaced("cattle-global-data", "gpu-global1", v1.GetOptions{})
+
+	_, err = c.gpus.GetNamespaced("cattle-global-data", "gpu-global1", v1.GetOptions{})
 	if err != nil && !k8sErrors.IsNotFound(err) {
 		return err
 	}
@@ -75,11 +117,9 @@ func (c *Controller) InitGPU() error {
 		if err != nil {
 			return err
 		}
-		if !reflect.DeepEqual(payload.Status.Message, exist.Status.Message) || !reflect.DeepEqual(payload.TotalGPUCount, exist.TotalGPUCount) || !reflect.DeepEqual(payload.NodeGPUInfo, exist.NodeGPUInfo) {
+		if !reflect.DeepEqual(payload.Status, exist.Status) {
 			exist.Spec.Enabled = payload.Spec.Enabled
-			exist.Status.Message = payload.Status.Message
-			exist.TotalGPUCount = payload.TotalGPUCount
-			exist.NodeGPUInfo = payload.NodeGPUInfo
+			exist.Status = payload.Status
 			_, err = c.gpus.Update(exist)
 			if err != nil {
 				return err
@@ -87,4 +127,31 @@ func (c *Controller) InitGPU() error {
 		}
 	}
 	return nil
+}
+
+func getGPUCountFromNode(node *v3.Node) int {
+	// 从节点中获取 GPU 数量
+	gpuQuantity, ok := node.Status.InternalNodeStatus.Capacity["nvidia.com/gpu"]
+	if !ok {
+		return 0
+	}
+	gpuCount := gpuQuantity.Value()
+	return int(gpuCount)
+}
+
+func getUsedGPUCountFromNode(node *v3.Node) int {
+	// 从节点中获取已使用的 GPU 数量
+	gpuQuantity, ok := node.Status.InternalNodeStatus.Allocatable["nvidia.com/gpu"]
+	if !ok {
+		return 0
+	}
+	gpuCount := gpuQuantity.Value()
+	return int(gpuCount)
+}
+
+func getUnusedGPUCountFromNode(node *v3.Node) int {
+	// 从节点中获取未使用的 GPU 数量
+	totalGPU := getGPUCountFromNode(node)
+	usedGPU := getUsedGPUCountFromNode(node)
+	return totalGPU - usedGPU
 }
