@@ -32,8 +32,8 @@ type GPUStatus struct {
 
 // 表示每个集群的 GPU 信息
 type ClusterGPUInfo struct {
-	// 集群名称
-	ClusterName string `json:"clusterName"`
+	// 集群 ID
+	ClusterId string `json:"clusterId"`
 	// 当前集群中所有节点的 GPU 总量
 	TotalGPUCount int `json:"totalGPUCount"`
 	// 当前集群中所有节点的 GPU 信息
@@ -64,8 +64,8 @@ type GpuCountActionInput struct {
 	NodeName string `json:"nodeName"`
 	// 节点 ID，用于筛选特定节点
 	NodeId string `json:"nodeId"`
-	// 集群名称，用于筛选特定集群
-	ClusterName string `json:"clusterName"`
+	// 集群 ID，用于筛选特定集群
+	ClusterId string `json:"clusterId"`
 	// 统计维度：total, used, unused
 	StatDimension string `json:"statDimension"`
 	// 是否启用调试模式

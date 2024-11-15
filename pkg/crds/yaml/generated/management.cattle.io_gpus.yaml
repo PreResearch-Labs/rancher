@@ -50,8 +50,8 @@ spec:
                 items:
                   description: 表示每个集群的 GPU 信息
                   properties:
-                    clusterName:
-                      description: 集群名称
+                    clusterId:
+                      description: 集群 ID
                       type: string
                     nodeGPUInfo:
                       description: 当前集群中所有节点的 GPU 信息
@@ -89,7 +89,7 @@ spec:
                       description: 当前集群中所有节点的 GPU 总量
                       type: integer
                   required:
-                  - clusterName
+                  - clusterId
                   - nodeGPUInfo
                   - totalGPUCount
                   type: object

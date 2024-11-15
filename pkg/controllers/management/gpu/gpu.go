@@ -58,10 +58,10 @@ func (c *Controller) InitGPU() error {
 	clusterGPUInfoMap := make(map[string]*v3.ClusterGPUInfo)
 	var totalGPUCount int
 	for _, node := range nodes {
-		clusterName := node.ObjClusterName()
-		if _, ok := clusterGPUInfoMap[clusterName]; !ok {
-			clusterGPUInfoMap[clusterName] = &v3.ClusterGPUInfo{
-				ClusterName:   clusterName,
+		clusterId := node.ObjClusterName()
+		if _, ok := clusterGPUInfoMap[clusterId]; !ok {
+			clusterGPUInfoMap[clusterId] = &v3.ClusterGPUInfo{
+				ClusterId:     clusterId,
 				TotalGPUCount: 0,
 				NodeGPUInfo:   []v3.NodeGPUInfo{},
 			}
@@ -75,8 +75,8 @@ func (c *Controller) InitGPU() error {
 			UsedGPU:      getUsedGPUCountFromNode(node),
 			UnusedGPU:    getUnusedGPUCountFromNode(node),
 		}
-		clusterGPUInfoMap[clusterName].NodeGPUInfo = append(clusterGPUInfoMap[clusterName].NodeGPUInfo, nodeGPUInfo)
-		clusterGPUInfoMap[clusterName].TotalGPUCount += nodeGPUInfo.TotalGPU
+		clusterGPUInfoMap[clusterId].NodeGPUInfo = append(clusterGPUInfoMap[clusterId].NodeGPUInfo, nodeGPUInfo)
+		clusterGPUInfoMap[clusterId].TotalGPUCount += nodeGPUInfo.TotalGPU
 		totalGPUCount += nodeGPUInfo.TotalGPU
 	}
 

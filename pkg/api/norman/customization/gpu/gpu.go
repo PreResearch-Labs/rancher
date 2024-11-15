@@ -68,26 +68,26 @@ func (w *GPUWrapper) ActionHandler(actionName string, action *types.Action, requ
 			if (input.NodeHostName == "" || node.Spec.RequestedHostname == input.NodeHostName) &&
 				(input.NodeName == "" || node.Name == input.NodeName) &&
 				(input.NodeId == "" || node.Name == input.NodeId) &&
-				(input.ClusterName == "" || node.ObjClusterName() == input.ClusterName) {
-				clusterName := node.ObjClusterName()
-				if _, ok := clusterGPUInfoMap[clusterName]; !ok {
-					clusterGPUInfoMap[clusterName] = &v3.ClusterGPUInfo{
-						ClusterName:   clusterName,
+				(input.ClusterId == "" || node.ObjClusterName() == input.ClusterId) {
+				clusterId := node.ObjClusterName()
+				if _, ok := clusterGPUInfoMap[clusterId]; !ok {
+					clusterGPUInfoMap[clusterId] = &v3.ClusterGPUInfo{
+						ClusterId:     clusterId,
 						TotalGPUCount: 0,
 						NodeGPUInfo:   []v3.NodeGPUInfo{},
 					}
 				}
 
 				nodeGPUInfo := v3.NodeGPUInfo{
-					NodeId:       fmt.Sprintf("%s:%s", clusterName, node.Name),
+					NodeId:       fmt.Sprintf("%s:%s", clusterId, node.Name),
 					NodeHostName: node.Spec.RequestedHostname,
 					NodeName:     node.Name,
 					TotalGPU:     getGPUCountFromNode(node),
 					UsedGPU:      getUsedGPUCountFromNode(node),
 					UnusedGPU:    getUnusedGPUCountFromNode(node),
 				}
-				clusterGPUInfoMap[clusterName].NodeGPUInfo = append(clusterGPUInfoMap[clusterName].NodeGPUInfo, nodeGPUInfo)
-				clusterGPUInfoMap[clusterName].TotalGPUCount += nodeGPUInfo.TotalGPU
+				clusterGPUInfoMap[clusterId].NodeGPUInfo = append(clusterGPUInfoMap[clusterId].NodeGPUInfo, nodeGPUInfo)
+				clusterGPUInfoMap[clusterId].TotalGPUCount += nodeGPUInfo.TotalGPU
 				totalGPUCount += nodeGPUInfo.TotalGPU
 			}
 		}
