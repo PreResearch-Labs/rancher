@@ -197,9 +197,10 @@ func GPU(schemas *types.Schemas, management *config.ScaledContext) {
 
 	// wrapper 变量就是在初始化 GPUWrapper 中的 User 等信息
 	wrapper := gpu.GPUWrapper{
-		Users:     management.Management.Users(""),
-		GrbLister: management.Management.GlobalRoleBindings("").Controller().Lister(),
-		GrLister:  management.Management.GlobalRoles("").Controller().Lister(),
+		Users:      management.Management.Users(""),
+		GrbLister:  management.Management.GlobalRoleBindings("").Controller().Lister(),
+		GrLister:   management.Management.GlobalRoles("").Controller().Lister(),
+		NodeLister: management.Management.Nodes("").Controller().Lister(),
 	}
 
 	// 定义按钮提交后要执行的功能函数，这里调用的就是 4 中的 ActionHandler 函数

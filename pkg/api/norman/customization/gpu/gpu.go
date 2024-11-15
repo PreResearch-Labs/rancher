@@ -8,12 +8,14 @@ import (
 	gaccess "github.com/rancher/rancher/pkg/api/norman/customization/globalnamespaceaccess"
 	v3 "github.com/rancher/rancher/pkg/apis/management.cattle.io/v3"
 	mgmtv3 "github.com/rancher/rancher/pkg/generated/norman/management.cattle.io/v3"
+	"k8s.io/apimachinery/pkg/labels"
 )
 
 type GPUWrapper struct {
-	Users     mgmtv3.UserInterface
-	GrbLister mgmtv3.GlobalRoleBindingLister
-	GrLister  mgmtv3.GlobalRoleLister
+	Users      mgmtv3.UserInterface
+	GrbLister  mgmtv3.GlobalRoleBindingLister
+	GrLister   mgmtv3.GlobalRoleLister
+	NodeLister mgmtv3.NodeLister
 }
 
 // 给 rancher api 添加事件，如果这里没有添加 countGPU 按钮是不能用的
@@ -48,25 +50,31 @@ func (w *GPUWrapper) ActionHandler(actionName string, action *types.Action, requ
 			return err
 		}
 
-		// 模拟节点和 GPU 数据
-		nodeGPUInfo := []v3.NodeGPUInfo{
-			{NodeName: "node1", TotalGPU: 8, UsedGPU: 3, UnusedGPU: 5},
-			{NodeName: "node2", TotalGPU: 6, UsedGPU: 2, UnusedGPU: 4},
-			{NodeName: "node3", TotalGPU: 4, UsedGPU: 1, UnusedGPU: 3},
+		// 检查 NodeLister 是否为 nil
+		if w.NodeLister == nil {
+			return fmt.Errorf("NodeLister is not initialized")
+		}
+
+		// 获取所有节点
+		nodes, err := w.NodeLister.List("", labels.Everything())
+		if err != nil {
+			return err
 		}
 
 		// 根据输入参数筛选节点
 		var filteredNodeGPUInfo []v3.NodeGPUInfo
-		for _, node := range nodeGPUInfo {
-			if input.NodeName == "" || node.NodeName == input.NodeName {
-				filteredNodeGPUInfo = append(filteredNodeGPUInfo, node)
-			}
-		}
-
-		// 计算总 GPU 数量
 		var totalGPUCount int
-		for _, node := range filteredNodeGPUInfo {
-			totalGPUCount += node.TotalGPU
+		for _, node := range nodes {
+			if input.NodeName == "" || node.Name == input.NodeName {
+				nodeGPUInfo := v3.NodeGPUInfo{
+					NodeName:  node.Name,
+					TotalGPU:  getGPUCountFromNode(node),
+					UsedGPU:   getUsedGPUCountFromNode(node),
+					UnusedGPU: getUnusedGPUCountFromNode(node),
+				}
+				filteredNodeGPUInfo = append(filteredNodeGPUInfo, nodeGPUInfo)
+				totalGPUCount += nodeGPUInfo.TotalGPU
+			}
 		}
 
 		// 构建响应
@@ -85,4 +93,31 @@ func (w *GPUWrapper) ActionHandler(actionName string, action *types.Action, requ
 	default:
 		return fmt.Errorf("Unknown action: %s", actionName)
 	}
+}
+
+func getGPUCountFromNode(node *v3.Node) int {
+	// 从节点中获取 GPU 数量
+	gpuQuantity, ok := node.Status.InternalNodeStatus.Capacity["nvidia.com/gpu"]
+	if !ok {
+		return 0
+	}
+	gpuCount := gpuQuantity.Value()
+	return int(gpuCount)
+}
+
+func getUsedGPUCountFromNode(node *v3.Node) int {
+	// 从节点中获取已使用的 GPU 数量
+	gpuQuantity, ok := node.Status.InternalNodeStatus.Allocatable["nvidia.com/gpu"]
+	if !ok {
+		return 0
+	}
+	gpuCount := gpuQuantity.Value()
+	return int(gpuCount)
+}
+
+func getUnusedGPUCountFromNode(node *v3.Node) int {
+	// 从节点中获取未使用的 GPU 数量
+	totalGPU := getGPUCountFromNode(node)
+	usedGPU := getUsedGPUCountFromNode(node)
+	return totalGPU - usedGPU
 }
