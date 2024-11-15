@@ -42,9 +42,40 @@ func (w *GPUWrapper) ActionHandler(actionName string, action *types.Action, requ
 
 	switch actionName {
 	case "countGPU1":
-		// 这里可以添加具体的 GPU 数量统计逻辑
-		gpuCount := 42 // 假设统计到的 GPU 数量为 42 TODO: this is fake GPU count.
-		response := v3.GPUStatus{Message: fmt.Sprintf("GPU Count: %d", gpuCount)}
+		// 获取输入参数
+		var input v3.GpuCountActionInput
+		if err := json.NewDecoder(request.Request.Body).Decode(&input); err != nil {
+			return err
+		}
+
+		// 模拟节点和 GPU 数据
+		nodeGPUInfo := []v3.NodeGPUInfo{
+			{NodeName: "node1", TotalGPU: 8, UsedGPU: 3, UnusedGPU: 5},
+			{NodeName: "node2", TotalGPU: 6, UsedGPU: 2, UnusedGPU: 4},
+			{NodeName: "node3", TotalGPU: 4, UsedGPU: 1, UnusedGPU: 3},
+		}
+
+		// 根据输入参数筛选节点
+		var filteredNodeGPUInfo []v3.NodeGPUInfo
+		for _, node := range nodeGPUInfo {
+			if input.NodeName == "" || node.NodeName == input.NodeName {
+				filteredNodeGPUInfo = append(filteredNodeGPUInfo, node)
+			}
+		}
+
+		// 计算总 GPU 数量
+		var totalGPUCount int
+		for _, node := range filteredNodeGPUInfo {
+			totalGPUCount += node.TotalGPU
+		}
+
+		// 构建响应
+		response := v3.GPU{
+			TotalGPUCount: totalGPUCount,
+			NodeGPUInfo:   filteredNodeGPUInfo,
+		}
+
+		// 序列化响应并发送
 		bytes, err := json.Marshal(response)
 		if err != nil {
 			return err

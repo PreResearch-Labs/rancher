@@ -25,9 +25,6 @@ spec:
               may reject unrecognized values.
               More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
             type: string
-          gpuCount:
-            description: 这里的 json:"gpuCount" 定义 api 字段名；如图："定义返回的数据结构" data 中的 gpuCount
-            type: integer
           kind:
             description: |-
               Kind is a string value representing the REST resource this object represents.
@@ -38,6 +35,26 @@ spec:
             type: string
           metadata:
             type: object
+          nodeGPUInfo:
+            description: 每个节点的 GPU 信息
+            items:
+              description: 表示每个节点的 GPU 信息
+              properties:
+                nodeName:
+                  type: string
+                totalGPU:
+                  type: integer
+                unusedGPU:
+                  type: integer
+                usedGPU:
+                  type: integer
+              required:
+              - nodeName
+              - totalGPU
+              - unusedGPU
+              - usedGPU
+              type: object
+            type: array
           spec:
             properties:
               enabled:
@@ -53,10 +70,14 @@ spec:
             required:
             - message
             type: object
+          totalGPUCount:
+            description: 集群中所有节点的 GPU 总量
+            type: integer
         required:
-        - gpuCount
+        - nodeGPUInfo
         - spec
         - status
+        - totalGPUCount
         type: object
     served: true
     storage: true

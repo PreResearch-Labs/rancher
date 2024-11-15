@@ -1,12 +1,14 @@
 package client
 
 const (
-	GpuCountActionInputType       = "gpuCountActionInput"
-	GpuCountActionInputFieldCount = "count"
-	GpuCountActionInputFieldDebug = "debug"
+	GpuCountActionInputType               = "gpuCountActionInput"
+	GpuCountActionInputFieldDebug         = "debug"
+	GpuCountActionInputFieldNodeName      = "nodeName"
+	GpuCountActionInputFieldStatDimension = "statDimension"
 )
 
 type GpuCountActionInput struct {
-	Count bool `json:"count,omitempty" yaml:"count,omitempty"`
-	Debug bool `json:"debug,omitempty" yaml:"debug,omitempty"`
+	Debug         bool   `json:"debug,omitempty" yaml:"debug,omitempty"`
+	NodeName      string `json:"nodeName,omitempty" yaml:"nodeName,omitempty"`
+	StatDimension string `json:"statDimension,omitempty" yaml:"statDimension,omitempty"`
 }

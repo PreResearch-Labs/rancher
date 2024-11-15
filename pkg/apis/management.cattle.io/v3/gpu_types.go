@@ -1,6 +1,8 @@
 package v3
 
-import metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+import (
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+)
 
 // +genclient
 // +genclient:nonNamespaced
@@ -12,8 +14,12 @@ type GPU struct {
 
 	Spec   GPUSpec   `json:"spec"`
 	Status GPUStatus `json:"status"`
-	// 这里的 json:"gpuCount" 定义 api 字段名；如图："定义返回的数据结构" data 中的 gpuCount
-	GPUCount int `json:"gpuCount" norman:"default=0"`
+
+	// 集群中所有节点的 GPU 总量
+	TotalGPUCount int `json:"totalGPUCount"`
+
+	// 每个节点的 GPU 信息
+	NodeGPUInfo []NodeGPUInfo `json:"nodeGPUInfo"`
 }
 
 type GPUSpec struct {
@@ -25,8 +31,20 @@ type GPUStatus struct {
 	Message string `json:"message"`
 }
 
+// 表示每个节点的 GPU 信息
+type NodeGPUInfo struct {
+	NodeName  string `json:"nodeName"`
+	TotalGPU  int    `json:"totalGPU"`
+	UsedGPU   int    `json:"usedGPU"`
+	UnusedGPU int    `json:"unusedGPU"`
+}
+
 // action 入参结构体
 type GpuCountActionInput struct {
-	Count bool `json:"count"`
+	// 节点名称，用于筛选特定节点
+	NodeName string `json:"nodeName"`
+	// 统计维度：total, used, unused
+	StatDimension string `json:"statDimension"`
+	// 是否启用调试模式
 	Debug bool `json:"debug"`
 }

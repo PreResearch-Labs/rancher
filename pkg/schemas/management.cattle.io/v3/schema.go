@@ -60,10 +60,8 @@ var (
 			Init(tokens)
 )
 
-// 定义 API 中的字段信息，以及 API type 为 Collection 或 resource 中的 action
 func gpuTypes(schemas *types.Schemas) *types.Schemas {
 	return schemas.
-
 		// TypeName 是为了让 schemas 知道一个结构体 v3.GPU{} 已经引入并且映射到 gpu；
 		// 在 schemas 中给 GPU{} 结构体定义名称。
 		TypeName("gpu", v3.GPU{}).

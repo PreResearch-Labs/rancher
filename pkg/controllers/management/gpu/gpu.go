@@ -59,6 +59,8 @@ func (c *Controller) InitGPU() error {
 		Status: v3.GPUStatus{
 			Message: "",
 		},
+		TotalGPUCount: 0,
+		NodeGPUInfo:   []v3.NodeGPUInfo{},
 	}
 	_, err := c.gpus.GetNamespaced("cattle-global-data", "gpu-global1", v1.GetOptions{})
 	if err != nil && !k8sErrors.IsNotFound(err) {
@@ -73,9 +75,11 @@ func (c *Controller) InitGPU() error {
 		if err != nil {
 			return err
 		}
-		if !reflect.DeepEqual(payload.Status.Message, exist.Status.Message) {
+		if !reflect.DeepEqual(payload.Status.Message, exist.Status.Message) || !reflect.DeepEqual(payload.TotalGPUCount, exist.TotalGPUCount) || !reflect.DeepEqual(payload.NodeGPUInfo, exist.NodeGPUInfo) {
 			exist.Spec.Enabled = payload.Spec.Enabled
 			exist.Status.Message = payload.Status.Message
+			exist.TotalGPUCount = payload.TotalGPUCount
+			exist.NodeGPUInfo = payload.NodeGPUInfo
 			_, err = c.gpus.Update(exist)
 			if err != nil {
 				return err
